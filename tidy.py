@@ -193,7 +193,7 @@ if __name__ == '__main__':
         if dbfile:
             # write filehash to dbfile
             write_cksums(filehash, dbfile)
-    if dbfile:
+    elif dbfile:
         # read filehash from dbfile
         filehash = read_cksums(dbfile)
     if prunepath:
