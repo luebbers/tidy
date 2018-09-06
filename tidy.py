@@ -184,20 +184,18 @@ if __name__ == '__main__':
     prunepath = args.prune
     dbfile = args.file
 
-    if not (scanpath or dbfile) and not (prunepath):
-        print('Nothing to do.')
+    if not (scanpath or (dbfile and prunepath)):
+        print('Nothing useful to do.')
         sys.exit(1)
+
     if scanpath:
         filehash = scan_files(scanpath, args.verbose)
         if dbfile:
             # write filehash to dbfile
             write_cksums(filehash, dbfile)
-    elif dbfile:
+    if dbfile:
         # read filehash from dbfile
         filehash = read_cksums(dbfile)
-    else:
-        print('Need either --scan or --file.')
-        sys.exit(1)
     if prunepath:
         # prune files based on filehash
         prune_files(prunepath, filehash, args.dry, args.verbose)
