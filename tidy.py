@@ -33,7 +33,7 @@ from subprocess import run
 def cksum(fname):
     ret = run(['cksum', fname], capture_output=True)
     ck, size, *_ = ret.stdout.decode().strip().split()
-    return (ck, size, fname)
+    return (int(ck), int(size), fname)
 
 
 def find_files(path):
@@ -68,11 +68,11 @@ def calc_cksums(files, verbose):
         if verbose:
             print(f' -> {ck}', flush=True, end='')
         if ck in filehash:
-            duplicates.append((ck, int(size), filename))
+            duplicates.append((ck, size, filename))
             if verbose:
                 print(' (DUPLICATE)')
         else:
-            filehash[ck] = (int(size), filename)
+            filehash[ck] = (size, filename)
             if verbose:
                 print('')
     return (filehash, duplicates)
