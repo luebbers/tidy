@@ -27,12 +27,16 @@ import pickle
 import os
 import sys
 from humanize import naturalsize
-from subprocess import run
+from subprocess import run, PIPE
 
 
 def cksum(fname):
-    ret = run(['cksum', fname], capture_output=True)
-    ck, size, *_ = ret.stdout.decode().strip().split()
+    ret = run(['cksum', fname], stdout=PIPE)
+    try:
+        ck, size, *_ = ret.stdout.decode().strip().split()
+    except ValueError:
+        print(f'Error getting checksum for {fname}.', file=sys.stderr)
+        return None
     return (int(ck), int(size), fname)
 
 
@@ -64,7 +68,14 @@ def calc_cksums(files, verbose):
     for f, sz in bar(files):
         if verbose:
             print(f'{f} ({naturalsize(sz, binary=True)})', flush=True, end='')
-        ck, size, filename = cksum(f)
+        ret = cksum(f)
+        if ret:
+            ck, size, filename = cksum(f)
+        else:
+            if verbose:
+                print('')
+            print(f'No checksum for {f}, skipping.', file=sys.stderr)
+            continue
         if verbose:
             print(f' -> {ck}', flush=True, end='')
         if ck in filehash:
@@ -143,7 +154,14 @@ def prune_files(path, filehash, dry, verbose):
     for f, sz in bar(files):
         if verbose:
             print(f'{f} ({naturalsize(sz, binary=True)})', flush=True, end='')
-        ck, size, filename = cksum(f)
+        ret = cksum(f)
+        if ret:
+            ck, size, filename = cksum(f)
+        else:
+            if verbose:
+                print('')
+            print(f'No checksum for {f}, skipping.', file=sys.stderr)
+            continue
         if verbose:
             print(f' -> {ck}', end='')
         if ck in filehash:
