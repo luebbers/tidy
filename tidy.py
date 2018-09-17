@@ -1,26 +1,17 @@
 #!/usr/bin/env python
 
-# Usage:
-# tidy.py --scan <scan dir> [-o <filename>] [-v]
-#
-#   Will scan `scan dir` and build a database of file checksums.
-#
-#       -o <filename>   write database to `filename` (optional, defaults to
-#                       name of scan dir plus '.cksum')
-#       -v              print names, sizes, and checksums of files checked
-#
-# -- OR --
-#
-# tidy.py --prune <prune dir> -i <filename> [-n] [-v]
-#
-#   Will scan `prune dir` for files matching the checksum of files found during
-#   a previous '--scan' run, and delete them.
-#
-#       -i <filename>   use `filename` as database of checksums to test against
-#       -n              dry run; do not delete files
-#       -v              print names, sizes, and checksums of files checked
+"""usage: tidy.py [-h] [--scan SCAN] [--prune PRUNE] [-f FILE] [-v] [-n]
 
-import argparse
+optional arguments:
+  -h, --help            show this help message and exit
+  --scan SCAN           directory to scan
+  --prune PRUNE         directory to prune
+  -f FILE, --file FILE  checksum file
+  -v, --verbose         be verbose
+  -n, --dry             dry run
+"""
+
+from docopt import docopt
 import glob
 import progressbar
 import pickle
@@ -189,25 +180,18 @@ def prune_files(path, filehash, dry, verbose):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--scan', help='directory to scan')
-    parser.add_argument('--prune', help='directory to prune')
-    parser.add_argument('-f', '--file', help='checksum file')
-    parser.add_argument('-v', '--verbose', help='be verbose', action='store_true')
-    parser.add_argument('-n', '--dry', help='dry run', action='store_true')
+    args = docopt(__doc__)
 
-    args = parser.parse_args()
-
-    scanpath = args.scan
-    prunepath = args.prune
-    dbfile = args.file
+    scanpath = args['--scan'] if '--scan' in args else None
+    prunepath = args['--prune'] if '--prune' in args else None
+    dbfile = args['--file'] if '--file' in args else None
 
     if not (scanpath or (dbfile and prunepath)):
         print('Nothing useful to do.')
         sys.exit(1)
 
     if scanpath:
-        filehash = scan_files(scanpath, args.verbose)
+        filehash = scan_files(scanpath, args['--verbose'])
         if dbfile:
             # write filehash to dbfile
             write_cksums(filehash, dbfile)
@@ -216,6 +200,6 @@ if __name__ == '__main__':
         filehash = read_cksums(dbfile)
     if prunepath:
         # prune files based on filehash
-        prune_files(prunepath, filehash, args.dry, args.verbose)
+        prune_files(prunepath, filehash, args['--dry'], args['--verbose'])
 
     
